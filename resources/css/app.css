@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Instrument+Serif:ital,wght@0,400;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Instrument Serif', 'Playfair Display', Georgia, serif;
+    
+    --color-brand-cream: #FAF6F0;
+    --color-brand-charcoal: #1A1513;
+    --color-brand-terracotta: #C15C3D;
+    --color-brand-terracotta-dark: #A4492E;
+    
+    --color-culture-yoruba: #B84A39;
+    --color-culture-yoruba-bg: #FCECE7;
+    --color-culture-hausa: #8C731F;
+    --color-culture-hausa-bg: #FBF3D5;
+    --color-culture-igbo: #137333;
+    --color-culture-igbo-bg: #E6F4EA;
+    --color-culture-universal: #5F6368;
+    --color-culture-universal-bg: #F1F3F4;
+    --color-culture-panafrican: #6B21A8;
+    --color-culture-panafrican-bg: #F3E8FD;
+}
+
+/* Custom Neo-Brutalist Border & Shadows */
+.neo-border {
+    border: 2px solid var(--color-brand-charcoal);
+}
+
+.neo-shadow {
+    box-shadow: 4px 4px 0px 0px var(--color-brand-charcoal);
+}
+
+.neo-shadow-sm {
+    box-shadow: 2px 2px 0px 0px var(--color-brand-charcoal);
+}
+
+.neo-shadow-lg {
+    box-shadow: 6px 6px 0px 0px var(--color-brand-charcoal);
+}
+
+.neo-shadow-active {
+    box-shadow: 1px 1px 0px 0px var(--color-brand-charcoal);
+    transform: translate(3px, 3px);
+}
+
+.neo-button-hover {
+    transition: all 0.15s ease-in-out;
+}
+
+.neo-button-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px var(--color-brand-charcoal);
+}
+
+.neo-button-hover:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px 0px var(--color-brand-charcoal);
+}
+
+/* Custom Adinkra / West African background motifs */
+.motif-bg-grid {
+    background-size: 24px 24px;
+    background-image: 
+        radial-gradient(var(--color-brand-charcoal) 1px, transparent 1px),
+        radial-gradient(var(--color-brand-charcoal) 1px, transparent 1px);
+    background-position: 0 0, 12px 12px;
+    opacity: 0.05;
+}
+
+/* Traditional Chevron / Zigzag border accents */
+.chevron-bg {
+    background-color: var(--color-brand-charcoal);
+    background-image: linear-gradient(45deg, transparent 50%, var(--color-brand-cream) 50%), linear-gradient(-45deg, transparent 50%, var(--color-brand-cream) 50%);
+    background-size: 16px 16px;
+    background-repeat: repeat-x;
+}
+
