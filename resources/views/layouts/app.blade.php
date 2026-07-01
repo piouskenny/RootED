@@ -70,14 +70,13 @@
                         <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
                             Audit log
                         </a>
-                    @else
                         <a href="/dashboard" class="bg-brand-charcoal/5 border border-brand-charcoal/10 rounded-lg px-4 py-1.5 font-bold text-sm text-brand-charcoal">
                             Dashboard
                         </a>
-                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                        <a href="/dashboard#recommendations" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
                             Catalogue
                         </a>
-                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                        <a href="/dashboard#recommendations" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
                             Courses
                         </a>
                         <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
@@ -102,12 +101,11 @@
                         <span id="navLocaleLabel">{{ strtoupper(app()->getLocale() ?: 'EN') }}</span>
                         <svg class="w-3 h-3 text-brand-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
                     </button>
-                    <!-- Locale Menu -->
                     <div id="navLocaleMenu" class="hidden absolute right-0 mt-2 w-32 bg-white neo-border neo-shadow-sm rounded-xl py-1 z-50">
-                        <a href="?locale=en" class="block w-full text-left px-4 py-2 text-xs font-bold hover:bg-brand-cream text-brand-charcoal transition-colors">English</a>
-                        <a href="?locale=yo" class="block w-full text-left px-4 py-2 text-xs font-bold hover:bg-brand-cream text-brand-charcoal transition-colors">Yorùbá</a>
-                        <a href="?locale=ha" class="block w-full text-left px-4 py-2 text-xs font-bold hover:bg-brand-cream text-brand-charcoal transition-colors">Hausa</a>
-                        <a href="?locale=ig" class="block w-full text-left px-4 py-2 text-xs font-bold hover:bg-brand-cream text-brand-charcoal transition-colors">Igbo</a>
+                        <a href="{{ request()->fullUrlWithQuery(['locale' => 'en']) }}" class="block w-full text-left px-4 py-2 text-xs font-bold hover:bg-brand-cream text-brand-charcoal transition-colors">English</a>
+                        <a href="{{ request()->fullUrlWithQuery(['locale' => 'yo']) }}" class="block w-full text-left px-4 py-2 text-xs font-bold hover:bg-brand-cream text-brand-charcoal transition-colors">Yorùbá</a>
+                        <a href="{{ request()->fullUrlWithQuery(['locale' => 'ha']) }}" class="block w-full text-left px-4 py-2 text-xs font-bold hover:bg-brand-cream text-brand-charcoal transition-colors">Hausa</a>
+                        <a href="{{ request()->fullUrlWithQuery(['locale' => 'ig']) }}" class="block w-full text-left px-4 py-2 text-xs font-bold hover:bg-brand-cream text-brand-charcoal transition-colors">Igbo</a>
                     </div>
                 </div>
 
@@ -174,8 +172,8 @@
                     <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Audit log</a>
                 @else
                     <a href="/dashboard" class="bg-brand-charcoal/5 rounded-lg px-4 py-2 font-bold text-sm text-brand-charcoal">Dashboard</a>
-                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Catalogue</a>
-                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Courses</a>
+                    <a href="/dashboard#recommendations" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Catalogue</a>
+                    <a href="/dashboard#recommendations" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Courses</a>
                     <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Discussion</a>
                 @endif
                 <div class="border-t border-brand-charcoal/10 my-2"></div>

@@ -62,4 +62,54 @@ class CourseContentController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Content added successfully!');
     }
+
+    /**
+     * Store a new module (content) directly from the course single page.
+     */
+    public function storeModule(Request $request, Course $course)
+    {
+        // Ensure the instructor owns this course
+        abort_if($course->instructor_id !== Auth::id(), 403);
+
+        $request->validate([
+            'type'        => 'required|string|in:Reading,Video,PDF,Quiz',
+            'title'       => 'required|string|max:255',
+            'body'        => 'nullable|string',
+            'language'    => 'required|string',
+            'culture_tag' => 'required|string|in:yoruba,hausa,igbo,northern_nigeria,panafrican,universal',
+            'status'      => 'required|string|in:Draft,Published',
+            'file'        => 'nullable|file|mimes:pdf,mp4,mov,avi|max:20480',
+        ]);
+
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('course_content', 'public');
+        }
+
+        $content = $course->contents()->create([
+            'type'        => $request->type,
+            'title'       => $request->title,
+            'body'        => $request->body,
+            'language'    => $request->language,
+            'culture_tag' => $request->culture_tag,
+            'status'      => $request->status,
+            'file_path'   => $filePath,
+        ]);
+
+        // Update Course Stats
+        $cultureItems = $course->culture_items ?? [];
+        $cultureTag   = $content->culture_tag;
+
+        if (!isset($cultureItems[$cultureTag])) {
+            $cultureItems[$cultureTag] = 0;
+        }
+        $cultureItems[$cultureTag]++;
+
+        $course->update([
+            'modules_count' => $course->contents()->count(),
+            'culture_items' => $cultureItems,
+        ]);
+
+        return redirect()->route('instructor.courses.show', $course)->with('success', 'Module added successfully!');
+    }
 }

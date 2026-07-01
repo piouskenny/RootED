@@ -47,7 +47,7 @@ class CourseSeeder extends Seeder
                 'students_count' => 1184,
                 'culture_items' => ['igbo' => 32, 'universal' => 18],
                 'avg_completion' => 60,
-                'status' => 'Draft',
+                'status' => 'Published',
             ],
             [
                 'title' => 'Pan-African Business Ethics',
@@ -57,19 +57,33 @@ class CourseSeeder extends Seeder
                 'students_count' => 318,
                 'culture_items' => ['panafrican' => 22],
                 'avg_completion' => 62,
-                'status' => 'Draft',
+                'status' => 'Published',
             ],
         ];
 
         foreach ($instructors as $instructor) {
-            foreach ($dummyCourses as $course) {
-                \App\Models\Course::firstOrCreate(
+            foreach ($dummyCourses as $courseData) {
+                $course = \App\Models\Course::firstOrCreate(
                     [
                         'instructor_id' => $instructor->id,
-                        'title' => $course['title'],
+                        'title' => $courseData['title'],
                     ],
-                    $course
+                    $courseData
                 );
+
+                // Create dummy modules for the course if none exist
+                if ($course->contents()->count() === 0) {
+                    $types = ['Reading', 'Video', 'PDF', 'Quiz'];
+                    for ($i = 1; $i <= $courseData['modules_count']; $i++) {
+                        $course->contents()->create([
+                            'type' => $types[array_rand($types)],
+                            'title' => "Module {$i}: Introduction to " . $courseData['title'],
+                            'body' => "This is the content body for Module {$i} of {$courseData['title']}. It covers essential concepts.",
+                            'language' => $courseData['langs'][0] ?? 'EN',
+                            'culture_tag' => $courseData['tag'] ?? 'universal',
+                        ]);
+                    }
+                }
             }
         }
     }

@@ -37,6 +37,14 @@
         </div>
     </div>
 
+    {{-- Flash success message --}}
+    @if(session('success'))
+    <div id="flash-success" class="flex items-center gap-3 bg-[#E2F5EA] border border-[#2B8B5C]/30 text-[#2B8B5C] px-5 py-4 rounded-xl text-sm font-bold">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        {{ session('success') }}
+    </div>
+    @endif
+
     <!-- STATS GRID -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
@@ -104,7 +112,7 @@
                     <tbody class="divide-y divide-brand-charcoal/5">
                         
                         @forelse($courses as $course)
-                        <tr class="hover:bg-brand-cream/30 transition-colors group">
+                        <tr class="hover:bg-brand-cream/30 transition-colors group cursor-pointer" onclick="window.location='{{ route('instructor.courses.show', $course) }}'">
                             <td class="px-6 py-5">
                                 <p class="font-bold text-sm text-brand-charcoal leading-snug">{{ $course->title }}</p>
                                 <p class="text-[10px] font-medium text-brand-charcoal/50 mt-1.5 uppercase tracking-wider">{{ $course->modules_count }} MODULES</p>
@@ -151,15 +159,26 @@
                             </td>
                             <td class="px-6 py-5 font-serif font-bold text-base">{{ number_format($course->students_count) }}</td>
                             <td class="px-6 py-5">
-                                @if($course->status === 'Published')
-                                    <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded border border-[#2B8B5C]/30 text-[#2B8B5C] bg-[#E2F5EA]">Published</span>
-                                @else
-                                    <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded border border-brand-charcoal/20 text-brand-charcoal/60 bg-brand-charcoal/5">Draft</span>
-                                @endif
+                                {{-- Inline status toggle form --}}
+                                <form action="{{ route('instructor.courses.toggle-status', $course) }}" method="POST" onclick="event.stopPropagation()">
+                                    @csrf
+                                    @if($course->status === 'Published')
+                                        <button type="submit" title="Click to revert to Draft"
+                                            class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded border border-[#2B8B5C]/30 text-[#2B8B5C] bg-[#E2F5EA] hover:bg-[#d4f0df] transition-colors cursor-pointer">
+                                            ✓ Published
+                                        </button>
+                                    @else
+                                        <button type="submit" title="Click to Publish"
+                                            class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded border border-amber-400/50 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors cursor-pointer">
+                                            ⚡ Draft
+                                        </button>
+                                    @endif
+                                </form>
                             </td>
                             <td class="px-6 py-5 text-right">
-                                <button class="px-4 py-1.5 border-2 border-brand-charcoal/20 rounded-lg shadow-sm text-xs font-bold hover:bg-brand-cream hover:border-brand-charcoal/40 transition-colors">Edit</button>
+                                <a href="{{ route('instructor.courses.show', $course) }}" onclick="event.stopPropagation()" class="px-4 py-1.5 border-2 border-brand-charcoal/20 rounded-lg shadow-sm text-xs font-bold hover:bg-brand-cream hover:border-brand-charcoal/40 transition-colors">View</a>
                             </td>
+
                         </tr>
                         @empty
                         <tr>

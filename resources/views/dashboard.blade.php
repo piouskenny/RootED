@@ -25,15 +25,26 @@
             
             <!-- Sub-headline -->
             <p class="text-sm sm:text-base font-medium text-brand-charcoal/70 max-w-xl leading-relaxed">
-                You're 62% through this week's plan. One module left for the streak.
+                @if($totalEnrolled > 0)
+                    You have completed {{ $overallCompletion }}% of your enrolled courses overall, with an average progress of {{ $avgProgress }}% across {{ $totalEnrolled }} active {{ Str::plural('course', $totalEnrolled) }}.
+                @else
+                    You are not enrolled in any courses yet. Choose a course from the recommendations below to start learning!
+                @endif
             </p>
         </div>
 
         <!-- CTA "Keep Going" Button -->
-        <a href="#" class="relative z-10 flex items-center justify-center gap-3 px-6 py-3.5 bg-brand-terracotta text-white font-bold uppercase tracking-wider rounded-xl neo-border neo-shadow neo-button-hover active:translate-y-[2px] active:shadow-sm transition-all duration-150 shrink-0">
-            <span>Keep going</span>
-            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg>
-        </a>
+        @if($totalEnrolled > 0)
+            <a href="{{ route('courses.show', $enrolledCourses->first()) }}" class="relative z-10 flex items-center justify-center gap-3 px-6 py-3.5 bg-brand-terracotta text-white font-bold uppercase tracking-wider rounded-xl neo-border neo-shadow neo-button-hover active:translate-y-[2px] active:shadow-sm transition-all duration-150 shrink-0">
+                <span>Keep going</span>
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg>
+            </a>
+        @else
+            <a href="#recommendations" class="relative z-10 flex items-center justify-center gap-3 px-6 py-3.5 bg-brand-terracotta text-white font-bold uppercase tracking-wider rounded-xl neo-border neo-shadow neo-button-hover active:translate-y-[2px] active:shadow-sm transition-all duration-150 shrink-0">
+                <span>Explore Courses</span>
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg>
+            </a>
+        @endif
     </div>
 
     <!-- "THIS WEEK" SCHEDULE BOX -->
@@ -114,173 +125,159 @@
     </div>
 
     <!-- "YOUR COURSES" GRID -->
+    @php
+        $cardStyles = [
+            'yoruba' => [
+                'bg' => 'bg-culture-yoruba-bg',
+                'border' => 'border-culture-yoruba/30',
+                'text' => 'text-culture-yoruba',
+                'bar' => 'bg-brand-terracotta',
+                'shape' => 'absolute right-12 top-12 w-20 h-20 bg-brand-charcoal/5 rotate-45 pointer-events-none group-hover:scale-110 transition-transform duration-300'
+            ],
+            'hausa' => [
+                'bg' => 'bg-culture-hausa-bg',
+                'border' => 'border-culture-hausa/30',
+                'text' => 'text-culture-hausa',
+                'bar' => 'bg-culture-hausa',
+                'shape' => 'absolute right-12 top-12 w-24 h-16 bg-brand-charcoal/5 -skew-x-12 pointer-events-none group-hover:scale-110 transition-transform duration-300'
+            ],
+            'igbo' => [
+                'bg' => 'bg-culture-igbo-bg/40',
+                'border' => 'border-culture-igbo/30',
+                'text' => 'text-culture-igbo',
+                'bar' => 'bg-culture-igbo',
+                'shape' => 'absolute right-12 top-12 w-20 h-20 bg-brand-charcoal/5 border border-brand-charcoal/10 rounded-full pointer-events-none group-hover:scale-110 transition-transform duration-300'
+            ],
+            'northern_nigeria' => [
+                'bg' => 'bg-[#F0F4F8]',
+                'border' => 'border-[#1D70B8]/30',
+                'text' => 'text-[#1D70B8]',
+                'bar' => 'bg-[#1D70B8]',
+                'shape' => 'absolute right-12 top-12 w-20 h-20 bg-[#1D70B8]/5 rotate-12 pointer-events-none group-hover:scale-110 transition-transform duration-300'
+            ],
+            'panafrican' => [
+                'bg' => 'bg-culture-panafrican-bg/50',
+                'border' => 'border-culture-panafrican/30',
+                'text' => 'text-culture-panafrican',
+                'bar' => 'bg-culture-panafrican',
+                'shape' => 'absolute right-12 top-12 w-20 h-20 bg-culture-panafrican/5 pointer-events-none group-hover:scale-110 transition-transform duration-300'
+            ],
+            'universal' => [
+                'bg' => 'bg-white',
+                'border' => 'border-brand-charcoal/20',
+                'text' => 'text-brand-charcoal/60',
+                'bar' => 'bg-brand-charcoal',
+                'shape' => 'absolute right-12 top-12 w-20 h-20 bg-brand-charcoal/5 pointer-events-none group-hover:scale-110 transition-transform duration-300'
+            ],
+        ];
+    @endphp
+
     <div class="space-y-4">
         <!-- Section Header -->
         <div class="flex justify-between items-end border-b border-brand-charcoal/10 pb-2">
             <h2 class="font-serif text-3xl font-bold text-brand-charcoal">Your courses</h2>
-            <span class="text-xs font-bold uppercase tracking-wider text-brand-charcoal/50">2 Active</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-brand-charcoal/50">{{ $totalEnrolled }} Active</span>
         </div>
 
         <!-- Course Cards Container -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            <!-- Course Card 1: Yoruba -->
-            <div class="bg-culture-yoruba-bg neo-border neo-shadow rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group min-h-[260px]">
-                <!-- Rotated background diamond geometric shape -->
-                <div class="absolute right-12 top-12 w-20 h-20 bg-brand-charcoal/5 rotate-45 pointer-events-none group-hover:scale-110 transition-transform duration-300"></div>
+            @forelse($enrolledCourses as $course)
+                @php
+                    $style = $cardStyles[$course->tag] ?? $cardStyles['universal'];
+                @endphp
+                <div onclick="window.location='{{ route('courses.show', $course) }}'" class="{{ $style['bg'] }} neo-border neo-shadow rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group min-h-[260px] cursor-pointer">
+                    <div class="{{ $style['shape'] }}"></div>
 
-                <div class="space-y-4 relative z-10">
-                    <!-- Badges -->
-                    <div class="flex justify-between items-center">
-                        <span class="px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md border border-culture-yoruba bg-white text-culture-yoruba">
-                            Yoruba
-                        </span>
-                        <div class="flex gap-1">
-                            <span class="w-5 h-5 rounded-full bg-white neo-border-sm text-[9px] flex items-center justify-center font-bold text-brand-charcoal">EN</span>
-                            <span class="w-5 h-5 rounded-full bg-white neo-border-sm text-[9px] flex items-center justify-center font-bold text-brand-charcoal">YO</span>
+                    <div class="space-y-4 relative z-10">
+                        <!-- Badges -->
+                        <div class="flex justify-between items-center">
+                            <span class="px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md border {{ $style['border'] }} bg-white {{ $style['text'] }}">
+                                {{ ucwords(str_replace('_', ' ', $course->tag)) }}
+                            </span>
+                            <div class="flex gap-1">
+                                @foreach($course->langs as $lang)
+                                    <span class="w-5 h-5 rounded-full bg-white neo-border-sm text-[9px] flex items-center justify-center font-bold text-brand-charcoal">{{ $lang }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="space-y-1">
+                            <h3 class="font-serif text-2xl font-bold text-brand-charcoal leading-snug group-hover:text-brand-terracotta transition-colors">
+                                {{ $course->title }}
+                            </h3>
+                            @if($course->instructor)
+                                <p class="text-xs font-medium text-brand-charcoal/60">By {{ $course->instructor->name }}</p>
+                            @endif
                         </div>
                     </div>
 
-                    <!-- Title -->
-                    <div class="space-y-1">
-                        <h3 class="font-serif text-2xl font-bold text-brand-charcoal leading-snug group-hover:text-brand-terracotta transition-colors">
-                            Yoruba Oral Literature & Modern Storytelling
-                        </h3>
-                        <p class="text-xs font-medium text-brand-charcoal/60">Dr. Olúwáṣẹ́yì Adébáyọ̀</p>
-                    </div>
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="pt-6 border-t border-brand-charcoal/10 relative z-10">
-                    <div class="flex justify-between items-center text-xs font-bold text-brand-charcoal/60 mb-2">
-                        <span>Progress</span>
-                        <span>62%</span>
-                    </div>
-                    <div class="w-full bg-white neo-border h-3.5 rounded-full p-0.5 overflow-hidden">
-                        <div class="bg-brand-terracotta h-full rounded-full transition-all duration-500" style="width: 62%;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Course Card 2: Hausa -->
-            <div class="bg-culture-hausa-bg neo-border neo-shadow rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group min-h-[260px]">
-                <!-- Background rectangle shape -->
-                <div class="absolute right-12 top-12 w-24 h-16 bg-brand-charcoal/5 -skew-x-12 pointer-events-none group-hover:scale-110 transition-transform duration-300"></div>
-
-                <div class="space-y-4 relative z-10">
-                    <!-- Badges -->
-                    <div class="flex justify-between items-center">
-                        <span class="px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md border border-culture-hausa bg-white text-culture-hausa">
-                            Hausa
-                        </span>
-                        <div class="flex gap-1">
-                            <span class="w-5 h-5 rounded-full bg-white neo-border-sm text-[9px] flex items-center justify-center font-bold text-brand-charcoal">EN</span>
-                            <span class="w-5 h-5 rounded-full bg-white neo-border-sm text-[9px] flex items-center justify-center font-bold text-brand-charcoal">HA</span>
-                            <span class="w-5 h-5 rounded-full bg-white neo-border-sm text-[9px] flex items-center justify-center font-bold text-brand-charcoal">YO</span>
+                    <!-- Progress Bar & Module Count -->
+                    <div class="pt-6 border-t border-brand-charcoal/10 relative z-10">
+                        <div class="flex justify-between items-center text-xs font-bold text-brand-charcoal/60 mb-2">
+                            <span>{{ $course->contents->count() }} Modules</span>
+                            <span>{{ $course->pivot->progress }}%</span>
+                        </div>
+                        <div class="w-full bg-white neo-border h-3.5 rounded-full p-0.5 overflow-hidden">
+                            <div class="{{ $style['bar'] }} h-full rounded-full transition-all duration-500" style="width: {{ $course->pivot->progress }}%;"></div>
                         </div>
                     </div>
-
-                    <!-- Title -->
-                    <div class="space-y-1">
-                        <h3 class="font-serif text-2xl font-bold text-brand-charcoal leading-snug group-hover:text-brand-terracotta transition-colors">
-                            Cassava-to-Market: Smallholder Agriculture
-                        </h3>
-                        <p class="text-xs font-medium text-brand-charcoal/60">Prof. Bilkisu Maikano</p>
-                    </div>
                 </div>
-
-                <!-- Progress Bar -->
-                <div class="pt-6 border-t border-brand-charcoal/10 relative z-10">
-                    <div class="flex justify-between items-center text-xs font-bold text-brand-charcoal/60 mb-2">
-                        <span>Progress</span>
-                        <span>28%</span>
-                    </div>
-                    <div class="w-full bg-white neo-border h-3.5 rounded-full p-0.5 overflow-hidden">
-                        <div class="bg-culture-hausa h-full rounded-full transition-all duration-500" style="width: 28%;"></div>
-                    </div>
+            @empty
+                <div class="col-span-2 bg-white border-2 border-dashed border-brand-charcoal/20 rounded-2xl py-12 text-center">
+                    <p class="text-sm text-brand-charcoal/50 font-bold uppercase tracking-wider">You are not enrolled in any courses yet.</p>
                 </div>
-            </div>
+            @endforelse
 
         </div>
     </div>
 
     <!-- "PICKED FOR YOU" SECTION -->
-    <div class="space-y-4">
+    <div id="recommendations" class="space-y-4">
         <!-- Section Header -->
         <div class="flex justify-between items-end border-b border-brand-charcoal/10 pb-2">
             <h2 class="font-serif text-3xl font-bold text-brand-charcoal">Picked for you</h2>
-            <a href="#" class="px-4 py-1.5 bg-white border-2 border-brand-charcoal shadow-sm rounded-lg text-xs font-bold hover:bg-brand-cream/80 hover:translate-y-[-1px] transition-all duration-150">
-                See all
-            </a>
+            <span class="text-xs font-bold uppercase tracking-wider text-brand-charcoal/50">{{ $recommendedCourses->count() }} Available</span>
         </div>
 
         <!-- Recommendations Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            <!-- Rec 1: Universal -->
-            <div class="bg-white neo-border neo-shadow-sm rounded-xl p-5 flex flex-col justify-between hover:translate-y-[-2px] transition-all duration-200">
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <span class="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border border-culture-universal bg-culture-universal-bg text-culture-universal">
-                            Universal
-                        </span>
-                        <div class="flex gap-1">
-                            <span class="w-4 h-4 rounded-full bg-brand-cream text-[8px] flex items-center justify-center font-bold text-brand-charcoal">EN</span>
-                            <span class="w-4 h-4 rounded-full bg-brand-cream text-[8px] flex items-center justify-center font-bold text-brand-charcoal">IG</span>
+            @forelse($recommendedCourses as $course)
+                @php
+                    $style = $cardStyles[$course->tag] ?? $cardStyles['universal'];
+                @endphp
+                <div onclick="window.location='{{ route('courses.show', $course) }}'" class="{{ $style['bg'] }} neo-border neo-shadow-sm rounded-xl p-5 flex flex-col justify-between hover:translate-y-[-2px] transition-all duration-200 cursor-pointer group relative overflow-hidden">
+                    <div class="{{ $style['shape'] }}"></div>
+                    <div class="space-y-4 relative z-10">
+                        <div class="flex justify-between items-center">
+                            <span class="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border {{ $style['border'] }} bg-white {{ $style['text'] }}">
+                                {{ ucwords(str_replace('_', ' ', $course->tag)) }}
+                            </span>
+                            <div class="flex gap-1">
+                                @foreach($course->langs as $lang)
+                                    <span class="w-4 h-4 rounded-full bg-brand-cream text-[8px] flex items-center justify-center font-bold text-brand-charcoal">{{ $lang }}</span>
+                                @endforeach
+                            </div>
                         </div>
+                        <h3 class="font-serif text-lg font-bold text-brand-charcoal leading-snug group-hover:text-brand-terracotta transition-colors">
+                            {{ $course->title }}
+                        </h3>
+                        @if($course->instructor)
+                            <p class="text-[10px] font-medium text-brand-charcoal/50">By {{ $course->instructor->name }}</p>
+                        @endif
                     </div>
-                    <h3 class="font-serif text-lg font-bold text-brand-charcoal leading-snug">
-                        Introduction to Web Development
-                    </h3>
-                </div>
-                <div class="pt-4 mt-6 border-t border-brand-charcoal/10 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-brand-charcoal/50">
-                    <span>10 Weeks &bull; 4 Modules</span>
-                    <span>1184 Students</span>
-                </div>
-            </div>
-
-            <!-- Rec 2: Pan-African -->
-            <div class="bg-culture-panafrican-bg/50 neo-border neo-shadow-sm rounded-xl p-5 flex flex-col justify-between hover:translate-y-[-2px] transition-all duration-200">
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <span class="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border border-culture-panafrican bg-white text-culture-panafrican">
-                            Pan-African
-                        </span>
-                        <div class="flex gap-1">
-                            <span class="w-4 h-4 rounded-full bg-brand-cream text-[8px] flex items-center justify-center font-bold text-brand-charcoal">EN</span>
-                        </div>
+                    <div class="pt-4 mt-6 border-t border-brand-charcoal/10 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-brand-charcoal/50 relative z-10">
+                        <span>{{ $course->contents->count() }} Modules</span>
+                        <span>{{ number_format($course->students_count) }} Students</span>
                     </div>
-                    <h3 class="font-serif text-lg font-bold text-brand-charcoal leading-snug">
-                        Pan-African Business Ethics
-                    </h3>
                 </div>
-                <div class="pt-4 mt-6 border-t border-brand-charcoal/10 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-brand-charcoal/50">
-                    <span>6 Weeks &bull; 3 Modules</span>
-                    <span>318 Students</span>
+            @empty
+                <div class="col-span-3 bg-white border-2 border-dashed border-brand-charcoal/20 rounded-2xl py-12 text-center">
+                    <p class="text-xs text-brand-charcoal/50 font-bold uppercase tracking-wider">No course recommendations available at this time.</p>
                 </div>
-            </div>
-
-            <!-- Rec 3: Igbo -->
-            <div class="bg-culture-igbo-bg/40 neo-border neo-shadow-sm rounded-xl p-5 flex flex-col justify-between hover:translate-y-[-2px] transition-all duration-200 col-span-1 sm:col-span-2 lg:col-span-1">
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <span class="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border border-culture-igbo bg-white text-culture-igbo">
-                            Igbo
-                        </span>
-                        <div class="flex gap-1">
-                            <span class="w-4 h-4 rounded-full bg-brand-cream text-[8px] flex items-center justify-center font-bold text-brand-charcoal">EN</span>
-                            <span class="w-4 h-4 rounded-full bg-brand-cream text-[8px] flex items-center justify-center font-bold text-brand-charcoal">IG</span>
-                        </div>
-                    </div>
-                    <h3 class="font-serif text-lg font-bold text-brand-charcoal leading-snug">
-                        Igbo Apprenticeship & The Modern Startup
-                    </h3>
-                </div>
-                <div class="pt-4 mt-6 border-t border-brand-charcoal/10 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-brand-charcoal/50">
-                    <span>5 Weeks &bull; 3 Modules</span>
-                    <span>189 Students</span>
-                </div>
-            </div>
+            @endforelse
 
         </div>
     </div>

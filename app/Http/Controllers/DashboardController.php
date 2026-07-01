@@ -98,11 +98,35 @@ class DashboardController extends Controller
         // Format current date matching: TODAY  TUESDAY, 7 MAY
         $currentDate = strtoupper(now()->translatedFormat('l, j F'));
 
+        // Load active enrolled courses
+        $enrolledCourses = $user->enrolledCourses()->with('contents')->get();
+        $enrolledCourseIds = $enrolledCourses->pluck('id')->toArray();
+
+        // Load recommended courses (published, not enrolled yet)
+        $recommendedCourses = \App\Models\Course::where('status', 'Published')
+            ->whereNotIn('id', $enrolledCourseIds)
+            ->with(['contents', 'instructor'])
+            ->get();
+
+        // Calculate progress stats
+        $totalEnrolled = $enrolledCourses->count();
+        $completedCoursesCount = $enrolledCourses->filter(function($course) {
+            return $course->pivot->progress === 100;
+        })->count();
+
+        $overallCompletion = $totalEnrolled > 0 ? round(($completedCoursesCount / $totalEnrolled) * 100) : 0;
+        $avgProgress = $totalEnrolled > 0 ? round($enrolledCourses->avg('pivot.progress')) : 0;
+
         return view('dashboard', [
             'user' => $user,
             'greeting' => $greeting,
             'currentDate' => $currentDate,
             'cultureFrame' => $cultureFrame,
+            'enrolledCourses' => $enrolledCourses,
+            'recommendedCourses' => $recommendedCourses,
+            'overallCompletion' => $overallCompletion,
+            'avgProgress' => $avgProgress,
+            'totalEnrolled' => $totalEnrolled,
         ]);
     }
 }
