@@ -38,23 +38,52 @@
                     <div class="w-9 h-9 rounded-full bg-brand-charcoal text-brand-cream flex items-center justify-center font-bold text-lg neo-border group-hover:scale-105 transition-transform duration-200">
                         M
                     </div>
-                    <span class="font-serif text-2xl font-bold tracking-tight text-brand-charcoal">medinat</span>
+                    <span class="font-serif text-2xl font-bold tracking-tight text-brand-charcoal">RootED</span>
                 </a>
 
                 <!-- Desktop Navigation Links -->
                 <nav class="hidden lg:flex items-center gap-1">
-                    <a href="/dashboard" class="bg-brand-charcoal/5 border border-brand-charcoal/10 rounded-lg px-4 py-1.5 font-bold text-sm text-brand-charcoal">
-                        Dashboard
-                    </a>
-                    <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
-                        Catalogue
-                    </a>
-                    <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
-                        Courses
-                    </a>
-                    <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
-                        Discussion
-                    </a>
+                    @php $role = auth()->check() ? auth()->user()->role : 'learner'; @endphp
+                    @if($role === 'instructor')
+                        <a href="/dashboard" class="bg-brand-charcoal/5 border border-brand-charcoal/10 rounded-lg px-4 py-1.5 font-bold text-sm text-brand-charcoal">
+                            Dashboard
+                        </a>
+                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                            My courses
+                        </a>
+                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                            Content editor
+                        </a>
+                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                            Students
+                        </a>
+                    @elseif($role === 'admin')
+                        <a href="/dashboard" class="bg-brand-charcoal/5 border border-brand-charcoal/10 rounded-lg px-4 py-1.5 font-bold text-sm text-brand-charcoal">
+                            Users
+                        </a>
+                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                            Culture tags
+                        </a>
+                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                            Locales
+                        </a>
+                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                            Audit log
+                        </a>
+                    @else
+                        <a href="/dashboard" class="bg-brand-charcoal/5 border border-brand-charcoal/10 rounded-lg px-4 py-1.5 font-bold text-sm text-brand-charcoal">
+                            Dashboard
+                        </a>
+                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                            Catalogue
+                        </a>
+                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                            Courses
+                        </a>
+                        <a href="#" class="px-4 py-1.5 font-semibold text-sm text-brand-charcoal/60 hover:text-brand-charcoal hover:bg-brand-charcoal/5 rounded-lg transition-all duration-150">
+                            Discussion
+                        </a>
+                    @endif
                 </nav>
             </div>
 
@@ -84,13 +113,14 @@
 
                 <!-- Role Selector (Learner/Instructor/Admin) Segmented control -->
                 <div class="hidden md:flex p-0.5 bg-brand-cream border-2 border-brand-charcoal rounded-xl relative shadow-sm">
-                    <button type="button" onclick="window.location.reload();" class="py-1 px-3 text-xs font-bold rounded-lg bg-brand-charcoal text-white border border-brand-charcoal">
+                    @php $role = auth()->check() ? auth()->user()->role : 'learner'; @endphp
+                    <button type="button" class="py-1 px-3 text-xs font-bold rounded-lg {{ $role === 'learner' ? 'bg-brand-charcoal text-white border border-brand-charcoal' : 'text-brand-charcoal/60 hover:bg-brand-charcoal/5' }}">
                         Learner
                     </button>
-                    <button type="button" class="py-1 px-3 text-xs font-bold rounded-lg text-brand-charcoal/60 hover:bg-brand-charcoal/5">
+                    <button type="button" class="py-1 px-3 text-xs font-bold rounded-lg {{ $role === 'instructor' ? 'bg-brand-charcoal text-white border border-brand-charcoal' : 'text-brand-charcoal/60 hover:bg-brand-charcoal/5' }}">
                         Instructor
                     </button>
-                    <button type="button" class="py-1 px-3 text-xs font-bold text-brand-charcoal/60 hover:bg-brand-charcoal/5">
+                    <button type="button" class="py-1 px-3 text-xs font-bold rounded-lg {{ $role === 'admin' ? 'bg-brand-charcoal text-white border border-brand-charcoal' : 'text-brand-charcoal/60 hover:bg-brand-charcoal/5' }}">
                         Admin
                     </button>
                 </div>
@@ -131,24 +161,30 @@
         <!-- Mobile Navigation Menu -->
         <div id="mobileMenu" class="hidden lg:hidden mt-3 border-t border-brand-charcoal/10 pt-3 animate-in slide-in-from-top-2 duration-150">
             <nav class="flex flex-col gap-2">
-                <a href="/dashboard" class="bg-brand-charcoal/5 rounded-lg px-4 py-2 font-bold text-sm text-brand-charcoal">
-                    Dashboard
-                </a>
-                <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">
-                    Catalogue
-                </a>
-                <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">
-                    Courses
-                </a>
-                <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">
-                    Discussion
-                </a>
+                @php $role = auth()->check() ? auth()->user()->role : 'learner'; @endphp
+                @if($role === 'instructor')
+                    <a href="/dashboard" class="bg-brand-charcoal/5 rounded-lg px-4 py-2 font-bold text-sm text-brand-charcoal">Dashboard</a>
+                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">My courses</a>
+                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Content editor</a>
+                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Students</a>
+                @elseif($role === 'admin')
+                    <a href="/dashboard" class="bg-brand-charcoal/5 rounded-lg px-4 py-2 font-bold text-sm text-brand-charcoal">Users</a>
+                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Culture tags</a>
+                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Locales</a>
+                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Audit log</a>
+                @else
+                    <a href="/dashboard" class="bg-brand-charcoal/5 rounded-lg px-4 py-2 font-bold text-sm text-brand-charcoal">Dashboard</a>
+                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Catalogue</a>
+                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Courses</a>
+                    <a href="#" class="px-4 py-2 font-semibold text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-charcoal/5">Discussion</a>
+                @endif
                 <div class="border-t border-brand-charcoal/10 my-2"></div>
                 <div class="flex items-center justify-between px-4 py-2">
                     <span class="text-xs font-bold text-brand-charcoal/50">Active Role</span>
                     <div class="flex p-0.5 bg-brand-cream border-2 border-brand-charcoal rounded-xl text-xs font-bold">
-                        <button class="py-1 px-3 rounded-lg bg-brand-charcoal text-white">Learner</button>
-                        <button class="py-1 px-3 text-brand-charcoal/60">Instructor</button>
+                        <button class="py-1 px-3 rounded-lg {{ $role === 'learner' ? 'bg-brand-charcoal text-white' : 'text-brand-charcoal/60' }}">Learner</button>
+                        <button class="py-1 px-3 rounded-lg {{ $role === 'instructor' ? 'bg-brand-charcoal text-white' : 'text-brand-charcoal/60' }}">Instructor</button>
+                        <button class="py-1 px-3 rounded-lg {{ $role === 'admin' ? 'bg-brand-charcoal text-white' : 'text-brand-charcoal/60' }}">Admin</button>
                     </div>
                 </div>
             </nav>

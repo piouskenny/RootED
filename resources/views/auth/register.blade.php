@@ -85,9 +85,9 @@
             <!-- Form -->
             <form action="{{ route('register') }}" method="POST" class="space-y-4">
                 @csrf
-                <input type="hidden" name="role" id="input-role" value="learner">
-                <input type="hidden" name="locale" id="input-locale" value="en">
-                <input type="hidden" name="culture_frame" id="input-culture-frame" value="yoruba">
+                <input type="hidden" name="role" id="input-role" value="{{ old('role', 'learner') }}">
+                <input type="hidden" name="locale" id="input-locale" value="{{ old('locale', 'en') }}">
+                <input type="hidden" name="culture_frame" id="input-culture-frame" value="{{ old('culture_frame', 'yoruba') }}">
                 
                 <!-- Full Name Input -->
                 <div>
@@ -239,9 +239,15 @@
 @section('scripts')
 <script>
     // State Variables
-    let currentLocale = 'en';
-    let currentRole = 'learner';
-    let currentCulture = 'yoruba';
+    let currentLocale = '{{ old('locale', 'en') }}';
+    let currentRole = '{{ old('role', 'learner') }}';
+    let currentCulture = '{{ old('culture_frame', 'yoruba') }}';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setRole(currentRole);
+        setCultureFrame(currentCulture);
+        changeLocale(currentLocale);
+    });
 
     // UI Translation Data
     const translations = {

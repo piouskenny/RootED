@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -22,6 +23,65 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        // Admin routing
+        if ($user->role === 'admin') {
+            $usersList = User::orderBy('created_at', 'desc')->paginate(10);
+            return view('admin-dashboard', [
+                'user' => $user,
+                'usersList' => $usersList,
+            ]);
+        }
+
+        // Instructor routing
+        if ($user->role === 'instructor') {
+            // Load courses with their contents
+            $courses = $user->courses()->with('contents')->get();
+            $publishedCount = $courses->where('status', 'Published')->count();
+            $draftCount = $courses->where('status', 'Draft')->count();
+            $totalStudents = $courses->sum('students_count');
+            $totalModules = $courses->sum('modules_count');
+
+            // Calculate content items and culture tag counts dynamically
+            $tagCounts = [
+                'yoruba' => 0,
+                'hausa' => 0,
+                'igbo' => 0,
+                'northern_nigeria' => 0,
+                'panafrican' => 0,
+                'universal' => 0,
+            ];
+            $totalContentItems = 0;
+
+            foreach ($courses as $course) {
+                $contentCount = $course->contents->count();
+                $totalContentItems += $contentCount;
+
+                foreach ($course->contents as $content) {
+                    $culture = $content->culture_tag ?? 'universal';
+                    if (isset($tagCounts[$culture])) {
+                        $tagCounts[$culture]++;
+                    } else {
+                        $tagCounts['universal']++;
+                    }
+                }
+            }
+
+            $avgCompletion = $courses->isNotEmpty() ? round($courses->avg('avg_completion')) : 0;
+
+            return view('instructor-dashboard', [
+                'user' => $user,
+                'courses' => $courses,
+                'publishedCount' => $publishedCount,
+                'draftCount' => $draftCount,
+                'totalStudents' => $totalStudents,
+                'totalModules' => $totalModules,
+                'tagCounts' => $tagCounts,
+                'totalContentItems' => $totalContentItems,
+                'avgCompletion' => $avgCompletion,
+            ]);
+        }
+
+        // Learner routing
         // Define cultural greeting mappings
         $greetings = [
             'yoruba'      => 'Ẹ̀kúàbọ̀, ' . explode(' ', $user->name)[0] . '.',
