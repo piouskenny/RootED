@@ -33,6 +33,9 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/users/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/users/login', [AuthController::class, 'login']);
 
+Route::get('/admin/login', [AuthController::class, 'showAdminLogin'])->name('admin.login');
+Route::post('/admin/login', [AuthController::class, 'adminLogin']);
+
 Route::get('/users/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/users/register', [AuthController::class, 'register']);
 

@@ -26,7 +26,63 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
-            'role' => ['required', 'string', 'in:learner,instructor,admin'],
+            'role' => ['required', 'string', 'in:learner,instructor'],
+            'locale' => ['nullable', 'string', 'in:en,yo,ha,ig'],
+        ]);
+
+        $remember = $request->filled('remember');
+
+        // We attempt normal authentication
+        if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $remember)) {
+            $request->session()->regenerate();
+
+            $user = Auth::user();
+
+            // Optionally check if the user's role matches their selected login role
+            if ($user->role !== $credentials['role']) {
+                // Ensure role matches to prevent unauthorized login attempts
+                if ($credentials['role'] === 'instructor' && !in_array($user->role, ['instructor', 'admin'])) {
+                    Auth::logout();
+                    return back()->withErrors([
+                        'email' => 'Unauthorized: This account is not registered as an Instructor.',
+                    ])->onlyInput('email');
+                }
+            }
+
+            // Sync user locale with form selected locale if present
+            if (!empty($credentials['locale'])) {
+                $user->update(['locale' => $credentials['locale']]);
+                session(['locale' => $credentials['locale']]);
+                App::setLocale($credentials['locale']);
+            } else {
+                session(['locale' => $user->locale]);
+                App::setLocale($user->locale);
+            }
+
+            return redirect()->intended('/dashboard')->with('success', 'Welcome back!');
+        }
+
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
+    }
+
+    /**
+     * Show the admin login form.
+     */
+    public function showAdminLogin()
+    {
+        return view('auth.admin_login');
+    }
+
+    /**
+     * Handle admin authentication.
+     */
+    public function adminLogin(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
             'locale' => ['nullable', 'string', 'in:en,yo,ha,ig'],
         ]);
 
@@ -58,31 +114,18 @@ class AuthController extends Controller
             return redirect()->intended('/dashboard')->with('success', 'Welcome back, Admin!');
         }
 
-        // We attempt normal authentication
+        // We attempt normal authentication for admin role from Database
         if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']], $remember)) {
-            $request->session()->regenerate();
-
             $user = Auth::user();
 
-            // Optionally check if the user's role matches their selected login role
-            if ($user->role !== $credentials['role']) {
-                // If they selected a role mismatch, we allow it but update their profile or alert.
-                // For a localization LMS, updating the role or aligning it makes sense.
-                // Let's ensure role matches to prevent unauthorized login attempts to Admin or Instructor panels
-                if ($credentials['role'] === 'admin' && $user->role !== 'admin') {
-                    Auth::logout();
-                    return back()->withErrors([
-                        'email' => 'Unauthorized: This account does not have Admin privileges.',
-                    ])->onlyInput('email');
-                }
-                
-                if ($credentials['role'] === 'instructor' && !in_array($user->role, ['instructor', 'admin'])) {
-                    Auth::logout();
-                    return back()->withErrors([
-                        'email' => 'Unauthorized: This account is not registered as an Instructor.',
-                    ])->onlyInput('email');
-                }
+            if ($user->role !== 'admin') {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Unauthorized: This account does not have Admin privileges.',
+                ])->onlyInput('email');
             }
+
+            $request->session()->regenerate();
 
             // Sync user locale with form selected locale if present
             if (!empty($credentials['locale'])) {
@@ -94,7 +137,7 @@ class AuthController extends Controller
                 App::setLocale($user->locale);
             }
 
-            return redirect()->intended('/dashboard')->with('success', 'Welcome back!');
+            return redirect()->intended('/dashboard')->with('success', 'Welcome back, Admin!');
         }
 
         return back()->withErrors([

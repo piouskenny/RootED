@@ -55,15 +55,12 @@
             <!-- Role Selector Tabs -->
             <div class="mb-8">
                 <label id="lbl-role-select" class="block text-xs font-bold uppercase tracking-wider text-brand-charcoal/60 mb-2">Select Account Type</label>
-                <div class="grid grid-cols-3 p-1 bg-brand-cream neo-border rounded-xl relative">
+                <div class="grid grid-cols-2 p-1 bg-brand-cream neo-border rounded-xl relative">
                     <button type="button" onclick="setRole('learner')" id="btn-role-learner" class="py-2.5 px-2 text-sm font-bold rounded-lg transition-all duration-200 bg-brand-charcoal text-white neo-border">
                         Learner
                     </button>
                     <button type="button" onclick="setRole('instructor')" id="btn-role-instructor" class="py-2.5 px-2 text-sm font-bold rounded-lg transition-all duration-200 text-brand-charcoal hover:bg-brand-charcoal/5">
                         Instructor
-                    </button>
-                    <button type="button" onclick="setRole('admin')" id="btn-role-admin" class="py-2.5 px-2 text-sm font-bold rounded-lg transition-all duration-200 text-brand-charcoal hover:bg-brand-charcoal/5">
-                        Admin
                     </button>
                 </div>
             </div>
@@ -347,7 +344,7 @@
         document.getElementById('input-role').value = role;
         
         // Reset button active classes
-        const roles = ['learner', 'instructor', 'admin'];
+        const roles = ['learner', 'instructor'];
         roles.forEach(r => {
             const btn = document.getElementById(`btn-role-${r}`);
             if (r === role) {
