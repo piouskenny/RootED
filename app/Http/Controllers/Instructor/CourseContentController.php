@@ -112,4 +112,85 @@ class CourseContentController extends Controller
 
         return redirect()->route('instructor.courses.show', $course)->with('success', 'Module added successfully!');
     }
+
+    public function edit(CourseContent $content)
+    {
+        $course = $content->course;
+        abort_if($course->instructor_id !== Auth::id(), 403);
+
+        $courses = Auth::user()->courses()->get();
+        return view('instructor.content.edit', compact('content', 'courses'));
+    }
+
+    public function update(Request $request, CourseContent $content)
+    {
+        $course = $content->course;
+        abort_if($course->instructor_id !== Auth::id(), 403);
+
+        $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'type' => 'required|string|in:Reading,Video,PDF,Quiz',
+            'title' => 'required|string|max:255',
+            'body' => 'nullable|string',
+            'language' => 'required|string',
+            'culture_tag' => 'required|string|in:yoruba,hausa,igbo,northern_nigeria,panafrican,universal',
+            'status' => 'required|string|in:Draft,Published',
+            'file' => 'nullable|file|mimes:pdf,mp4,mov,avi|max:20480',
+        ]);
+
+        $filePath = $content->file_path;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('course_content', 'public');
+        }
+
+        $content->update([
+            'course_id' => $request->course_id,
+            'type' => $request->type,
+            'title' => $request->title,
+            'body' => $request->body,
+            'language' => $request->language,
+            'culture_tag' => $request->culture_tag,
+            'status' => $request->status,
+            'file_path' => $filePath,
+        ]);
+
+        // Re-calculate course stats
+        $newCourse = Course::findOrFail($request->course_id);
+        
+        // Update both old and new course counts
+        foreach ([$course, $newCourse] as $c) {
+            $cultureItems = [];
+            foreach ($c->contents as $item) {
+                $tag = $item->culture_tag;
+                $cultureItems[$tag] = ($cultureItems[$tag] ?? 0) + 1;
+            }
+            $c->update([
+                'modules_count' => $c->contents()->count(),
+                'culture_items' => $cultureItems,
+            ]);
+        }
+
+        return redirect()->route('instructor.courses.show', $newCourse)->with('success', 'Module updated successfully!');
+    }
+
+    public function destroy(CourseContent $content)
+    {
+        $course = $content->course;
+        abort_if($course->instructor_id !== Auth::id(), 403);
+
+        $content->delete();
+
+        // Re-calculate course stats
+        $cultureItems = [];
+        foreach ($course->contents as $item) {
+            $tag = $item->culture_tag;
+            $cultureItems[$tag] = ($cultureItems[$tag] ?? 0) + 1;
+        }
+        $course->update([
+            'modules_count' => $course->contents()->count(),
+            'culture_items' => $cultureItems,
+        ]);
+
+        return redirect()->route('instructor.courses.show', $course)->with('success', 'Module deleted successfully!');
+    }
 }

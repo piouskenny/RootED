@@ -157,7 +157,7 @@
                                     @endforeach
                                 </div>
                             </td>
-                            <td class="px-6 py-5 font-serif font-bold text-base">{{ number_format($course->students_count) }}</td>
+                            <td class="px-6 py-5 font-serif font-bold text-base">{{ number_format($course->enrollments_count) }}</td>
                             <td class="px-6 py-5">
                                 {{-- Inline status toggle form --}}
                                 <form action="{{ route('instructor.courses.toggle-status', $course) }}" method="POST" onclick="event.stopPropagation()">

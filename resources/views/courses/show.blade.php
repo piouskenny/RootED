@@ -199,8 +199,12 @@
                         {{-- Open Module Button (enrolled only) --}}
                         @if($isEnrolled)
                             <button
-                                onclick="openModule('{{ addslashes($module->title) }}', '{{ addslashes($module->body) }}', '{{ $module->type }}')"
-                                class="shrink-0 self-center flex items-center gap-1.5 px-3 py-1.5 border border-brand-charcoal/20 rounded-lg text-xs font-bold bg-white hover:bg-brand-terracotta hover:text-white hover:border-brand-terracotta transition-all duration-150">
+                                type="button"
+                                data-id="{{ $module->id }}"
+                                data-title="{{ $module->title }}"
+                                data-body="{{ $module->body }}"
+                                data-type="{{ $module->type }}"
+                                class="open-module-btn shrink-0 self-center flex items-center gap-1.5 px-3 py-1.5 border border-brand-charcoal/20 rounded-lg text-xs font-bold bg-white hover:bg-brand-terracotta hover:text-white hover:border-brand-terracotta transition-all duration-150 cursor-pointer">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -208,6 +212,7 @@
                                 Open
                             </button>
                         @endif
+
                     </div>
                 @endforeach
             </div>
@@ -247,9 +252,27 @@
                 </button>
             </div>
 
+            {{-- Localize / Translate Bar --}}
+            <div id="modal-translation-bar" class="px-6 py-2.5 bg-brand-cream/50 border-b border-brand-charcoal/10 flex items-center justify-between gap-3 text-xs shrink-0">
+                <div class="flex items-center gap-1.5 font-bold text-brand-charcoal/60">
+                    <svg class="w-4 h-4 text-brand-terracotta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-1.043 2.56-2.6 4.9-4.57 6.72" />
+                    </svg>
+                    <span>Localize Content:</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="localizeModalContent('en')" id="lang-btn-en" class="px-2.5 py-1 rounded font-bold border-2 border-brand-charcoal bg-brand-charcoal text-white transition-all shadow-sm">EN</button>
+                    <button type="button" onclick="localizeModalContent('yo')" id="lang-btn-yo" class="px-2.5 py-1 rounded font-bold border-2 border-brand-charcoal/10 bg-white text-brand-charcoal/80 hover:bg-brand-cream transition-all">YO</button>
+                    <button type="button" onclick="localizeModalContent('ha')" id="lang-btn-ha" class="px-2.5 py-1 rounded font-bold border-2 border-brand-charcoal/10 bg-white text-brand-charcoal/80 hover:bg-brand-cream transition-all">HA</button>
+                    <button type="button" onclick="localizeModalContent('ig')" id="lang-btn-ig" class="px-2.5 py-1 rounded font-bold border-2 border-brand-charcoal/10 bg-white text-brand-charcoal/80 hover:bg-brand-cream transition-all">IG</button>
+                </div>
+            </div>
+
+
             {{-- Modal Body --}}
-            <div class="flex-1 overflow-y-auto px-6 py-6">
-                <div id="modal-body" class="prose prose-sm max-w-none text-brand-charcoal/80 leading-relaxed text-sm whitespace-pre-line"></div>
+            <div class="flex-1 overflow-y-auto px-6 py-6" style="max-height: calc(85vh - 180px);">
+                <div id="modal-body-text" class="prose prose-sm max-w-none text-brand-charcoal/80 leading-relaxed text-sm"></div>
+                <div id="modal-quiz-container" class="hidden space-y-6"></div>
             </div>
 
             {{-- Modal Footer --}}
@@ -277,13 +300,237 @@
     }
 
     // Module reader modal
-    function openModule(title, body, type) {
+    let currentModuleId = null;
+    let currentModuleType = null;
+    let currentRawBody = null;
+
+    // Listen for module button clicks using data attributes to avoid quote/newline parsing errors
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.open-module-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const title = this.getAttribute('data-title');
+                const body = this.getAttribute('data-body');
+                const type = this.getAttribute('data-type');
+                openModule(id, title, body, type);
+            });
+        });
+    });
+
+    function openModule(id, title, body, type) {
+        currentModuleId = id;
+        currentModuleType = type;
+        currentRawBody = body;
+        
+        // Reset translation button classes
+        setActiveLangBtn('en');
+
         document.getElementById('modal-title').textContent = title;
-        document.getElementById('modal-body').textContent = body || 'No content available for this module yet.';
         document.getElementById('modal-type').textContent = type + ' Module';
+        
+        renderContent(body, type);
+
         var modal = document.getElementById('module-modal');
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+    }
+
+    function renderContent(body, type) {
+        const textContainer = document.getElementById('modal-body-text');
+        const quizContainer = document.getElementById('modal-quiz-container');
+
+        if (type === 'Quiz') {
+            textContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            quizContainer.innerHTML = '';
+
+            try {
+                const quizData = JSON.parse(body);
+                if (Array.isArray(quizData)) {
+                    quizData.forEach((qItem, qIndex) => {
+                        const qDiv = document.createElement('div');
+                        qDiv.className = 'p-5 bg-brand-cream/35 border-2 border-brand-charcoal rounded-xl space-y-3';
+                        
+                        // Question Header
+                        const qTitle = document.createElement('h4');
+                        qTitle.className = 'font-bold text-sm text-brand-charcoal';
+                        qTitle.textContent = `${qIndex + 1}. ${qItem.question}`;
+                        qDiv.appendChild(qTitle);
+
+                        // Options Container
+                        const optionsDiv = document.createElement('div');
+                        optionsDiv.className = 'space-y-2';
+
+                        qItem.options.forEach((option, oIndex) => {
+                            const optLabel = document.createElement('label');
+                            optLabel.className = 'flex items-center gap-3 p-3 bg-white border border-brand-charcoal/20 rounded-lg cursor-pointer hover:bg-brand-cream/40 transition-colors text-xs font-medium';
+                            
+                            const optRadio = document.createElement('input');
+                            optRadio.type = 'radio';
+                            optRadio.name = `quiz_q_${qIndex}`;
+                            optRadio.value = oIndex;
+                            optRadio.className = 'text-brand-terracotta focus:ring-brand-terracotta';
+                            
+                            // On answer select, show answer feedback
+                            optRadio.addEventListener('change', () => {
+                                // Disable other radios in this question group
+                                qDiv.querySelectorAll(`input[name="quiz_q_${qIndex}"]`).forEach(r => r.disabled = true);
+                                
+                                if (parseInt(oIndex) === parseInt(qItem.answer)) {
+                                    optLabel.className = 'flex items-center gap-3 p-3 bg-[#E2F5EA] border-2 border-[#2B8B5C] text-[#2B8B5C] rounded-lg text-xs font-bold';
+                                    const correctBadge = document.createElement('span');
+                                    correctBadge.className = 'ml-auto text-[9px] font-bold uppercase tracking-wider bg-[#2B8B5C] text-white px-2 py-0.5 rounded';
+                                    correctBadge.textContent = 'Correct';
+                                    optLabel.appendChild(correctBadge);
+                                } else {
+                                    optLabel.className = 'flex items-center gap-3 p-3 bg-culture-yoruba-bg border-2 border-culture-yoruba text-culture-yoruba rounded-lg text-xs font-bold';
+                                    const wrongBadge = document.createElement('span');
+                                    wrongBadge.className = 'ml-auto text-[9px] font-bold uppercase tracking-wider bg-culture-yoruba text-white px-2 py-0.5 rounded';
+                                    wrongBadge.textContent = 'Incorrect';
+                                    optLabel.appendChild(wrongBadge);
+
+                                    // Highlight correct answer
+                                    const correctLabel = optionsDiv.children[qItem.answer];
+                                    correctLabel.className = 'flex items-center gap-3 p-3 bg-[#E2F5EA] border-2 border-[#2B8B5C] text-[#2B8B5C] rounded-lg text-xs font-bold';
+                                }
+                            });
+
+                            optLabel.appendChild(optRadio);
+                            optLabel.appendChild(document.createTextNode(option));
+                            optionsDiv.appendChild(optLabel);
+                        });
+
+                        qDiv.appendChild(optionsDiv);
+                        quizContainer.appendChild(qDiv);
+                    });
+                } else {
+                    quizContainer.innerHTML = `<p class="text-xs text-brand-charcoal/60 whitespace-pre-line">${body}</p>`;
+                }
+            } catch (e) {
+                // If it is not valid JSON, render as plain text quiz
+                quizContainer.innerHTML = `<p class="text-xs text-brand-charcoal/60 whitespace-pre-line">${body}</p>`;
+            }
+        } else {
+            quizContainer.classList.add('hidden');
+            textContainer.classList.remove('hidden');
+            textContainer.innerHTML = parseMarkdown(body || 'No content available for this module yet.');
+        }
+    }
+
+    function parseMarkdown(text) {
+        if (!text) return '';
+        
+        // Escape HTML to prevent XSS
+        let html = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        // Parse Headers
+        html = html.replace(/^### (.*$)/gim, '<h4 class="font-bold text-sm text-brand-charcoal mt-4 mb-2">$1</h4>');
+        html = html.replace(/^## (.*$)/gim, '<h3 class="font-serif text-lg font-bold text-brand-charcoal mt-5 mb-2.5">$1</h3>');
+        html = html.replace(/^# (.*$)/gim, '<h2 class="font-serif text-xl font-bold text-brand-charcoal mt-6 mb-3">$1</h2>');
+
+        // Parse Bold
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-brand-charcoal">$1</strong>');
+
+        // Parse Italics
+        html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
+
+        // Parse Lists (unordered)
+        let lines = html.split('\n');
+        let inList = false;
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].trim();
+            if (line.startsWith('- ') || line.startsWith('* ')) {
+                let content = line.substring(2);
+                if (!inList) {
+                    lines[i] = '<ul class="list-disc list-inside my-3 space-y-1.5 pl-2">\n<li class="text-brand-charcoal/80">' + content + '</li>';
+                    inList = true;
+                } else {
+                    lines[i] = '<li class="text-brand-charcoal/80">' + content + '</li>';
+                }
+            } else {
+                if (inList) {
+                    lines[i] = '</ul>\n' + lines[i];
+                    inList = false;
+                }
+            }
+        }
+        if (inList) {
+            lines[lines.length - 1] += '\n</ul>';
+        }
+        html = lines.join('\n');
+
+        // Parse Paragraphs (split by double newline, wrap non-HTML blocks)
+        let paragraphs = html.split(/\n\n+/);
+        html = paragraphs.map(p => {
+            let trimmed = p.trim();
+            if (!trimmed) return '';
+            if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<li') || trimmed.startsWith('</ul')) {
+                return trimmed;
+            }
+            let formatted = trimmed.replace(/\n/g, '<br>');
+            return `<p class="my-4 text-brand-charcoal/80 leading-relaxed text-sm">${formatted}</p>`;
+        }).join('\n');
+
+        return html;
+    }
+
+    function localizeModalContent(lang) {
+        if (!currentModuleId) return;
+
+        // If switching back to English, use the original stored body
+        if (lang === 'en' && currentRawBody) {
+            setActiveLangBtn('en');
+            document.getElementById('modal-title').textContent = document.querySelector(`.open-module-btn[data-id="${currentModuleId}"]`)?.getAttribute('data-title') || '';
+            renderContent(currentRawBody, currentModuleType);
+            return;
+        }
+
+        // Visual feedback during translation load
+        setActiveLangBtn(lang);
+
+        const textContainer = document.getElementById('modal-body-text');
+        const quizContainer = document.getElementById('modal-quiz-container');
+        const activeContainer = currentModuleType === 'Quiz' ? quizContainer : textContainer;
+        activeContainer.style.opacity = '0.4';
+
+        fetch(`/courses/{{ $course->id }}/contents/${currentModuleId}/localize?lang=${lang}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
+            credentials: 'same-origin'
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('Translation request failed (status ' + res.status + ')');
+                return res.json();
+            })
+            .then(data => {
+                activeContainer.style.opacity = '1';
+                document.getElementById('modal-title').textContent = data.title;
+                renderContent(data.body, data.type);
+            })
+            .catch(err => {
+                activeContainer.style.opacity = '1';
+                console.error("Localization failed:", err);
+                alert('Translation failed. Please make sure you are logged in and try again.');
+            });
+    }
+
+    function setActiveLangBtn(lang) {
+        ['en', 'yo', 'ha', 'ig'].forEach(l => {
+            const btn = document.getElementById(`lang-btn-${l}`);
+            if (btn) {
+                if (l === lang) {
+                    btn.className = "px-2.5 py-1 rounded font-bold border-2 border-brand-charcoal bg-brand-charcoal text-white transition-all shadow-sm";
+                } else {
+                    btn.className = "px-2.5 py-1 rounded font-bold border-2 border-brand-charcoal/10 bg-white text-brand-charcoal/80 hover:bg-brand-cream transition-all";
+                }
+            }
+        });
     }
 
     function closeModule() {

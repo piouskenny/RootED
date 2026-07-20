@@ -91,4 +91,154 @@ class LearnerCourseController extends Controller
 
         return back()->with('success', 'Module completion updated!');
     }
+
+    /**
+     * Localize content (Reading text or Quiz questions) to a target language.
+     */
+    public function localizeContent(Request $request, Course $course, CourseContent $content)
+    {
+        $targetLang = strtolower($request->query('lang', 'en'));
+
+        $title = $content->title;
+        $body  = $content->body;
+
+        // If English requested, return as-is immediately
+        if ($targetLang === 'en') {
+            return response()->json([
+                'title'    => $title,
+                'body'     => $body,
+                'language' => 'EN',
+                'type'     => $content->type,
+            ]);
+        }
+
+        // Detect whether the body is a JSON Quiz array
+        $quizData  = json_decode($body, true);
+        $isJsonQuiz = json_last_error() === JSON_ERROR_NONE && is_array($quizData);
+
+        if ($isJsonQuiz) {
+            // Translate each question and each option individually
+            $translatedQuiz = [];
+            foreach ($quizData as $item) {
+                $translatedOpts = [];
+                foreach ($item['options'] as $opt) {
+                    $translatedOpts[] = $this->apiTranslate($opt, $targetLang);
+                }
+                $translatedQuiz[] = [
+                    'question' => $this->apiTranslate($item['question'], $targetLang),
+                    'options'  => $translatedOpts,
+                    'answer'   => $item['answer'],
+                ];
+            }
+            $translatedBody  = json_encode($translatedQuiz);
+            $translatedTitle = $this->apiTranslate($title, $targetLang);
+        } else {
+            // Plain reading content — translate title and body
+            $translatedTitle = $this->apiTranslate($title, $targetLang);
+            $translatedBody  = $this->apiTranslate($body, $targetLang);
+        }
+
+        return response()->json([
+            'title'    => $translatedTitle,
+            'body'     => $translatedBody,
+            'language' => strtoupper($targetLang),
+            'type'     => $content->type,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────
+    // Private helpers
+    // ─────────────────────────────────────────────
+
+    /**
+     * Translate $text to $lang using the MyMemory free API.
+     * Long text is automatically split into ≤450-char chunks.
+     * Falls back to the original text on any network / API failure.
+     */
+    private function apiTranslate(string $text, string $lang): string
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return $text;
+        }
+
+        // MyMemory language-pair codes for our supported languages
+        $langMap = ['yo' => 'yo', 'ha' => 'ha', 'ig' => 'ig'];
+        $pair    = 'en|' . ($langMap[$lang] ?? $lang);
+
+        $chunks     = $this->chunkText($text, 450);
+        $translated = [];
+
+        foreach ($chunks as $chunk) {
+            $url = 'https://api.mymemory.translated.net/get?' . http_build_query([
+                'q'        => $chunk,
+                'langpair' => $pair,
+            ]);
+
+            try {
+                $ctx = stream_context_create([
+                    'http' => ['timeout' => 12, 'ignore_errors' => true],
+                    'ssl'  => ['verify_peer' => false, 'verify_peer_name' => false],
+                ]);
+
+                $raw = @file_get_contents($url, false, $ctx);
+
+                if ($raw === false) {
+                    $translated[] = $chunk;
+                    continue;
+                }
+
+                $data = json_decode($raw, true);
+
+                $result = $data['responseData']['translatedText'] ?? null;
+
+                if (
+                    isset($data['responseStatus']) &&
+                    $data['responseStatus'] === 200 &&
+                    $result !== null &&
+                    !str_starts_with((string) $result, 'MYMEMORY WARNING')
+                ) {
+                    $translated[] = $result;
+                } else {
+                    $translated[] = $chunk; // fall back to original chunk
+                }
+            } catch (\Throwable $e) {
+                $translated[] = $chunk;
+            }
+        }
+
+        return implode(' ', $translated);
+    }
+
+    /**
+     * Split text into chunks of at most $maxLen characters, breaking on spaces.
+     */
+    private function chunkText(string $text, int $maxLen = 450): array
+    {
+        if (mb_strlen($text) <= $maxLen) {
+            return [$text];
+        }
+
+        $chunks  = [];
+        $words   = explode(' ', $text);
+        $current = '';
+
+        foreach ($words as $word) {
+            $candidate = $current === '' ? $word : "$current $word";
+            if (mb_strlen($candidate) > $maxLen) {
+                if ($current !== '') {
+                    $chunks[] = $current;
+                }
+                $current = $word;
+            } else {
+                $current = $candidate;
+            }
+        }
+
+        if ($current !== '') {
+            $chunks[] = $current;
+        }
+
+        return $chunks;
+    }
 }

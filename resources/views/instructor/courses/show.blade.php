@@ -162,13 +162,26 @@
                 </div>
 
                 {{-- Status + Date --}}
-                <div class="shrink-0 text-right space-y-1.5">
+                <div class="shrink-0 text-right space-y-1.5 flex flex-col items-end">
                     @if($module->status === 'Published')
                         <span class="block px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider rounded border border-[#2B8B5C]/30 text-[#2B8B5C] bg-[#E2F5EA]">Published</span>
                     @else
                         <span class="block px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider rounded border border-brand-charcoal/20 text-brand-charcoal/60 bg-brand-charcoal/5">Draft</span>
                     @endif
                     <p class="text-[9px] text-brand-charcoal/40 font-medium">{{ $module->created_at->format('d M Y') }}</p>
+                    
+                    <div class="flex items-center gap-2 mt-2 pt-1">
+                        <a href="{{ route('instructor.modules.edit', $module) }}" class="text-[9px] font-bold text-brand-charcoal/60 hover:text-brand-terracotta transition-colors uppercase tracking-wider">
+                            Edit
+                        </a>
+                        <span class="text-brand-charcoal/20 text-[10px] font-medium">|</span>
+                        <form action="{{ route('instructor.modules.destroy', $module) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this module?');" class="inline">
+                            @csrf
+                            <button type="submit" class="text-[9px] font-bold text-red-600/70 hover:text-red-600 transition-colors uppercase tracking-wider cursor-pointer bg-transparent border-0 p-0">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
             @endforeach

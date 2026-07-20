@@ -34,11 +34,11 @@ class DashboardController extends Controller
 
         // Instructor routing
         if ($user->role === 'instructor') {
-            // Load courses with their contents
-            $courses = $user->courses()->with('contents')->get();
+            // Load courses with their contents and enrollment counts dynamically
+            $courses = $user->courses()->with('contents')->withCount('enrollments')->get();
             $publishedCount = $courses->where('status', 'Published')->count();
             $draftCount = $courses->where('status', 'Draft')->count();
-            $totalStudents = $courses->sum('students_count');
+            $totalStudents = $courses->sum('enrollments_count');
             $totalModules = $courses->sum('modules_count');
 
             // Calculate content items and culture tag counts dynamically

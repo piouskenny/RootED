@@ -23,11 +23,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/instructor/content/create', [CourseContentController::class, 'create'])->name('instructor.content.create');
     Route::post('/instructor/content', [CourseContentController::class, 'store'])->name('instructor.content.store');
     Route::post('/instructor/courses/{course}/modules', [CourseContentController::class, 'storeModule'])->name('instructor.courses.modules.store');
+    Route::get('/instructor/modules/{content}/edit', [CourseContentController::class, 'edit'])->name('instructor.modules.edit');
+    Route::post('/instructor/modules/{content}', [CourseContentController::class, 'update'])->name('instructor.modules.update');
+    Route::post('/instructor/modules/{content}/delete', [CourseContentController::class, 'destroy'])->name('instructor.modules.destroy');
 
     // Learner Course Routes
     Route::get('/courses/{course}', [\App\Http\Controllers\LearnerCourseController::class, 'show'])->name('courses.show');
     Route::post('/courses/{course}/enroll', [\App\Http\Controllers\LearnerCourseController::class, 'enroll'])->name('courses.enroll');
     Route::post('/courses/{course}/modules/{content}/toggle', [\App\Http\Controllers\LearnerCourseController::class, 'toggleModule'])->name('courses.modules.toggle');
+    Route::get('/courses/{course}/contents/{content}/localize', [\App\Http\Controllers\LearnerCourseController::class, 'localizeContent'])->name('courses.contents.localize');
 });
 
 Route::get('/users/login', [AuthController::class, 'showLogin'])->name('login');
